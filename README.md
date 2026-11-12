@@ -2,7 +2,7 @@
 
 Conjunto de sete painéis que reúne os resultados de marketing de uma indústria de lubrificantes que vende por distribuidores: campanhas de incentivo, orçamento previsto contra gasto, pagamentos e um programa de promotores de venda.
 
-**[Abrir os painéis online](https://SEU-USUARIO.github.io/bi-marketing/)**
+**[Abrir os painéis online](https://gustavogarre.github.io/bi-marketing/)**
 
 ![Página inicial com o mapa dos painéis](prints/inicio.png)
 
@@ -123,9 +123,9 @@ bi-marketing/
 
 Não precisa instalar nada: baixe o repositório e abra o `index.html` no navegador.
 
-Para publicar no GitHub Pages, vá em **Settings > Pages** no repositório, escolha a branch `main` e a pasta `/ (root)`, e salve. Em alguns minutos o site fica disponível em `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`.
+Para publicar no GitHub Pages, vá em **Settings > Pages** no repositório, escolha a branch `main` e a pasta `/ (root)`, e salve. Em alguns minutos o site fica disponível em `https://gustavogarre.github.io/bi-marketing/`.
 
 ## Autor
 
 **Gustavo Garré**, CRM e Dados
-[LinkedIn](https://www.linkedin.com/in/SEU-PERFIL)
+[LinkedIn](linkedin.com/in/gustavo-garre)
