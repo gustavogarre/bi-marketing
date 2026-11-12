@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promotores | BI de Marketing</title>
+<meta name="description" content="Resultado do programa de promotores de venda.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body data-root="../" data-painel="promotor">
+<div id="app"></div>
+<script src="../assets/dados.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+const po = DADOS.promotor, atip = po.porEstado.filter(e => e.atipico);
+Painel.montar({ views: { geral: { tab: "Geral", render: () => `
+  ${kpis(
+    kpi("Abordagens", nf0.format(po.abordagens)),
+    kpi("Com CNPJ ou CPF", nf0.format(po.comDocumento), `${nf0.format(po.unicos)} estabelecimentos únicos`),
+    kpi("Valor comprado", `<span id="po-val"></span>`, `<span id="po-hint"></span>`),
+    kpi("Recompras", po.recompras, `${brl(po.valorRecompra)} em recompra`))}
+  ${nota("warn", `<b>Dois contatos distorcem o total.</b> ${brlC(M.poAtipico)} dos ${brlC(M.poTotal)} vêm de apenas ${atip.length} contatos (${atip.map(a => a.uf).join(" e ")}), provavelmente distribuidores grandes que já compravam antes do programa. Por isso o painel os exclui por padrão.`)}
+  <section class="panel"><h2>Resumo por estado</h2>
+    <label class="toggle"><input type="checkbox" id="po-toggle"> Incluir contatos atípicos nos totais</label>
+    <div class="tscroll"><table>
+      <thead><tr><th>Estado</th><th class="num">Contatos com venda</th><th class="num">Valor total</th><th class="num">Recompra ou novo</th></tr></thead>
+      <tbody id="po-body"></tbody><tfoot id="po-foot"></tfoot>
+    </table></div>
+  </section>`,
+  after: () => {
+    const cb = document.getElementById("po-toggle");
+    const draw = () => {
+      const inc = cb.checked, rows = po.porEstado.filter(e => inc || !e.atipico);
+      document.getElementById("po-body").innerHTML = rows.map(e => `<tr><td>${e.uf}${e.atipico ? " (atípico)" : ""}</td><td class="num">${e.contatos}</td><td class="num">${brl(e.valor)}</td><td class="num">${brl(e.recompra)}</td></tr>`).join("");
+      document.getElementById("po-foot").innerHTML = `<tr><td>Total</td><td class="num">${sum(rows, "contatos")}</td><td class="num">${brl(sum(rows, "valor"))}</td><td class="num">${brl(sum(rows, "recompra"))}</td></tr>`;
+      document.getElementById("po-val").textContent = brlC(inc ? M.poTotal : M.poSemAtipico);
+      document.getElementById("po-hint").textContent = inc ? "incluindo contatos atípicos" : `sem os ${atip.length} contatos atípicos`;
+    };
+    cb.addEventListener("change", draw); draw();
+  }
+}}});
+</script>
+</body>
+</html>

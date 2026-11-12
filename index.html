@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visão geral | BI de Marketing</title>
+<meta name="description" content="Dashboards de marketing B2B com dados fictícios. Projeto de portfólio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/estilo.css">
+</head>
+<body data-root="">
+<div id="app"></div>
+<script src="assets/dados.js"></script>
+<script src="assets/comum.js"></script>
+<script>
+const alertas = [
+  { href: "paineis/multimarcas.html", txt: `<b>${pct(M.mmAbaixo, 0)} dos distribuidores multimarcas</b> venderam abaixo do próprio normal durante a campanha de meta.` },
+  { href: "paineis/pagamentos.html",  txt: `<b>${brlC(M.atrasado.valor)} em pagamentos atrasados</b>, ${pct(M.atrasado.valor / M.pgTotal, 0)} de tudo que foi processado.` },
+  { href: "paineis/planejamento.html", txt: `<b>Orçamento abaixo do ritmo:</b> ${pct(M.exec, 0)} executado, quando o ritmo linear seria ${pct(M.ritmo, 0)}.` },
+  { href: "paineis/promotor.html",    txt: `<b>Dois contatos respondem por ${pct(M.poAtipico / M.poTotal, 0)}</b> do valor atribuído ao programa de promotores.` }
+];
+Painel.montar({
+  cabecalho: `
+    <div class="crumb"><b style="color:var(--ink)">${DADOS.empresa}</b>, marketing B2B (empresa fictícia)</div>
+    <h1>BI de Marketing 2026</h1>
+    <p class="sub">Sete painéis que reúnem campanhas de incentivo, orçamento, pagamentos e o programa de promotores. Cada painel responde a uma pergunta, para um público específico.</p>`,
+  views: { inicio: { tab: "Início", render: () => `
+    ${kpis(
+      kpi("Investido em campanhas", brlC(M.invTotal), `${DADOS.campanhas.length} campanhas ativas`),
+      kpi("Vendas nas campanhas", brlC(M.vendasTotal), "campanhas medidas em reais"),
+      kpi("Orçamento executado", pct(M.exec), `de ${brlC(M.orcamento)} no ano`),
+      kpi("Pagamentos atrasados", brlC(M.atrasado.valor), `${M.atrasado.qtd} pagamentos`, "red"))}
+
+    <section class="panel"><h2>Pontos de atenção</h2>
+      ${alertas.map(a => `<div class="row"><span>${a.txt}</span><span><a href="${a.href}">Ver painel</a></span></div>`).join("")}
+    </section>
+
+    <h2 class="section-h">Como o painel está organizado</h2>
+    <p class="section-p">Esta página é o ponto de partida. Os painéis estão em dois grupos, conforme o tipo de decisão que apoiam, e alguns têm detalhamentos para ir do resumo ao nível de equipe ou de campanha.</p>
+    <div class="map">${Object.entries(GRUPOS).map(([gid, g]) => `
+      <section class="group" aria-labelledby="g-${gid}"><h2 id="g-${gid}">${g.nome}</h2><p>${g.desc}</p>
+        ${PAINEIS.filter(p => p.grupo === gid).map(p => `
+          <a class="card" href="paineis/${p.id}.html">
+            <div class="t">${p.nome}</div>
+            <div class="q">${p.pergunta}</div>
+            <div class="a">Para: ${p.publico}. Fonte: ${p.fonte}.</div>
+            ${p.detalhes.length ? `<div class="d" aria-label="Detalhamentos">${p.detalhes.map(d => `<span>${d}</span>`).join("")}</div>` : ""}
+          </a>`).join("")}
+      </section>`).join("")}
+    </div>
+    ${nota("info", `<b>Quatro fontes, períodos diferentes.</b> Os painéis usam o BI de campanhas, a planilha de orçamento, o controle de pagamentos e o relatório de promotores. Cada painel informa a própria fonte; confira o período antes de comparar números entre painéis.`)}`
+  }}
+});
+</script>
+</body>
+</html>

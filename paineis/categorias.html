@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Por categoria | BI de Marketing</title>
+<meta name="description" content="Investimento e vendas por categoria de parceiro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body data-root="../" data-painel="categorias">
+<div id="app"></div>
+<script src="../assets/dados.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+const cats = M.porCategoria;
+const invT = sum(cats, "investido"), venT = sum(cats, "vendas");
+Painel.montar({ views: { geral: { tab: "Geral", render: () => {
+  const destaque = [...cats].sort((a, b) => (b.vendas / venT - b.investido / invT) - (a.vendas / venT - a.investido / invT))[0];
+  return `
+  <div class="grid3">${cats.map(c => `
+    <section class="panel"><h2>${c.nome}</h2><p class="desc">${c.desc}</p>
+      <div class="row"><span>Participantes</span><span>${nf0.format(c.participantes)}</span></div>
+      <div class="row"><span>Investido</span><span>${brlC(c.investido)}</span></div>
+      <div class="row"><span>Vendas</span><span>${brlC(c.vendas)}</span></div>
+      <div class="row"><span>Investimento sobre venda</span><span>${pct(c.razao, 2)}</span></div>
+      ${c.temLitros ? `<p class="small">Inclui o investimento da campanha em litros, mas não as vendas dela (outra unidade). A razão considera só as campanhas em reais.</p>` : ""}
+      ${c.id === "interna" ? `<p class="small">Supervisão fora da soma: ${brl(M.supInv)} investidos à parte.</p>` : ""}
+    </section>`).join("")}</div>
+  <section class="panel"><h2>Participação no investimento x participação nas vendas</h2>
+    <p class="desc">Comparar a fatia de cada categoria nos dois totais mostra quem entrega mais venda do que recebe de investimento.</p>
+    ${cats.map(c => `<div class="pair"><div class="nm">${c.nome}</div>
+      <div class="ln">${barra(c.investido / invT, "Investimento " + pct(c.investido / invT, 0))}<span>Investimento ${pct(c.investido / invT, 0)}</span></div>
+      <div class="ln">${barra(c.vendas / venT, "Vendas " + pct(c.vendas / venT, 0), "blue")}<span>Vendas ${pct(c.vendas / venT, 0)}</span></div></div>`).join("")}
+  </section>
+  ${nota("info", `<b>${destaque.nome} é a categoria mais eficiente.</b> Recebe ${pct(destaque.investido / invT, 0)} do investimento em campanhas e responde por ${pct(destaque.vendas / venT, 0)} das vendas.`)}`;
+}}}});
+</script>
+</body>
+</html>

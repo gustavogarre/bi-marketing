@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distribuidor multimarcas | BI de Marketing</title>
+<meta name="description" content="Efeito da campanha de meta nos distribuidores externos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body data-root="../" data-painel="multimarcas">
+<div id="app"></div>
+<script src="../assets/dados.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+const mm = DADOS.multimarcas, c = M.meta;
+const linhas = arr => arr.map(([n, v]) => `<tr><td>${n}</td><td class="num ${v < 0 ? "neg" : "pos"}">${v > 0 ? "+" : ""}${brlC(v)}</td></tr>`).join("");
+Painel.montar({ views: {
+  geral: { tab: "Geral", render: () => {
+    const tot = mm.comBaseline;
+    return `
+    ${kpis(
+      kpi("Distribuidores", c.participantes, `${tot} com histórico para comparar`),
+      kpi("Investido", brlC(c.investido)),
+      kpi("Vendas no período", brlC(c.vendas)),
+      kpi("Investimento sobre venda", pct(c.investido / c.vendas, 2)))}
+    ${nota("warn", `<b>A campanha não moveu a maioria da rede.</b> Dos ${tot} distribuidores com histórico, ${mm.abaixo} (${pct(M.mmAbaixo)}) venderam abaixo do próprio normal durante a campanha. Só ${mm.acima} (${pct(M.mmAcima)}) cresceram.`)}
+    <section class="panel"><h2>Variação contra o baseline de cada distribuidor</h2>
+      <div class="stacked" role="img" aria-label="${mm.abaixo} abaixo, ${mm.estavel} estáveis, ${mm.acima} acima do baseline">
+        <span style="width:${mm.abaixo / tot * 100}%;background:var(--red)"></span>
+        <span style="width:${mm.estavel / tot * 100}%;background:var(--muted)"></span>
+        <span style="width:${mm.acima / tot * 100}%;background:var(--green)"></span>
+      </div>
+      <div class="legend">
+        <div><span class="sw" style="background:var(--red)"></span>Abaixo<b>${mm.abaixo}</b></div>
+        <div><span class="sw" style="background:var(--muted)"></span>Estável<b>${mm.estavel}</b></div>
+        <div><span class="sw" style="background:var(--green)"></span>Acima<b>${mm.acima}</b></div>
+      </div>
+      <p class="small">Baseline: média de vendas do distribuidor nos meses anteriores à campanha. Comparar cada um com ele mesmo evita que os maiores dominem a leitura.</p>
+    </section>
+    <div class="grid2">
+      <section class="panel"><h2>Maiores quedas</h2><div class="tscroll"><table><thead><tr><th>Distribuidor</th><th class="num">Variação</th></tr></thead><tbody>${linhas(mm.quedas)}</tbody></table></div></section>
+      <section class="panel"><h2>Maiores altas</h2><div class="tscroll"><table><thead><tr><th>Distribuidor</th><th class="num">Variação</th></tr></thead><tbody>${linhas(mm.altas)}</tbody></table></div></section>
+    </div>`;
+  }},
+  meta: { tab: c.nome, render: () => {
+    const maxV = Math.max(...mm.mensal.map(m => m.vendas));
+    return `
+    ${kpis(
+      kpi("Participantes", c.participantes),
+      kpi("Meses apurados", c.meses, statusTag(c.status)),
+      kpi("Investido por mês", brlC(c.investido / c.meses)),
+      kpi("Venda por mês", brlC(c.vendas / c.meses)))}
+    <section class="panel"><h2>Evolução mês a mês</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Mês</th><th class="num">Investido</th><th class="num">Vendas</th><th>Vendas</th><th class="num">Invest./venda</th></tr></thead>
+        <tbody>${mm.mensal.map(m => `<tr><td>${m.mes}</td><td class="num">${brl(m.investido)}</td><td class="num">${brlC(m.vendas)}</td><td>${barra(m.vendas / maxV, brlC(m.vendas), "blue")}</td><td class="num">${pct(m.investido / m.vendas, 2)}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td>Total</td><td class="num">${brl(c.investido)}</td><td class="num">${brlC(c.vendas)}</td><td></td><td class="num">${pct(c.investido / c.vendas, 2)}</td></tr></tfoot>
+      </table></div>
+      <p class="small">As vendas ficaram estáveis enquanto o investimento subiu a partir de abril, o que reforça a leitura do painel geral: o prêmio não mudou o comportamento da rede.</p>
+    </section>
+    ${nota("info", `<b>Única campanha ativa para multimarcas.</b> Por isso o painel geral e este detalhamento usam a mesma base. Quando houver outras campanhas para esse público, elas entram aqui como novos detalhamentos.`)}`;
+  }}
+}});
+</script>
+</body>
+</html>

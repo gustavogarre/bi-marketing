@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Por campanha | BI de Marketing</title>
+<meta name="description" content="Comparativo de eficiência entre campanhas de durações diferentes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body data-root="../" data-painel="campanhas">
+<div id="app"></div>
+<script src="../assets/dados.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+const C = DADOS.campanhas, cat = id => DADOS.categorias[id].nome;
+const nomeCamp = id => M.camp(id).nome;
+Painel.montar({ views: {
+  comparativo: { tab: "Comparativo", render: () => {
+    const rs = C.filter(c => c.unidade === "R$").sort((a, b) => a.investido / a.vendas - b.investido / b.vendas);
+    const ls = C.filter(c => c.unidade === "L");
+    return `
+    ${kpis(
+      kpi("Campanhas ativas", C.length),
+      kpi("Investimento total", brlC(M.invTotal)),
+      kpi("Vendas no período", brlC(M.vendasTotal), "só campanhas medidas em reais"),
+      kpi("Participantes", nf0.format(M.participantesTotal)))}
+    ${nota("info", `<b>Comparação justa entre durações diferentes.</b> Uma campanha de sete meses sempre soma mais que uma de um mês. Por isso a tabela usa médias mensais e a relação investimento sobre venda, em que <b>menor é melhor</b>.`)}
+    <section class="panel"><h2>Campanhas, da mais para a menos eficiente</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Campanha</th><th>Categoria</th><th class="num">Particip.</th><th class="num">Meses</th><th>Status</th><th class="num">Investido</th><th class="num">Invest./mês</th><th class="num">Venda/mês</th><th class="num">Invest./venda</th></tr></thead>
+        <tbody>
+          ${rs.map(c => `<tr><td>${c.nome}</td><td>${cat(c.categoria)}</td><td class="num">${nf0.format(c.participantes)}</td><td class="num">${c.meses}</td><td>${statusTag(c.status)}</td><td class="num">${brl(c.investido)}</td><td class="num">${brl(c.investido / c.meses)}</td><td class="num">${brlC(c.vendas / c.meses)}</td><td class="num">${pct(c.investido / c.vendas, 2)}</td></tr>`).join("")}
+          ${ls.map(c => `<tr><td>${c.nome}</td><td>${cat(c.categoria)}</td><td class="num">${c.participantes}</td><td class="num">${c.meses}</td><td>${statusTag(c.status)}</td><td class="num">${brl(c.investido)}</td><td class="num">${brl(c.investido / c.meses)}</td><td class="num">${nf0.format(c.litros / c.meses)} L</td><td class="num">R$ ${nf2.format(c.investido / c.litros)}/L</td></tr>`).join("")}
+        </tbody>
+      </table></div>
+      <p class="small">A campanha em litros fica no fim e usa outra unidade (reais por litro), porque não dá para comparar litros com reais. Premiações de supervisão ficam de fora: o faturamento delas já está nos vendedores.</p>
+    </section>`;
+  }},
+  eficientes: { tab: "Parceiros mais eficientes", render: () => {
+    const E = [...DADOS.eficientes].sort((a, b) => a.investido / a.vendas - b.investido / b.vendas);
+    return `
+    <section class="panel"><h2>Parceiros com menor investimento por real vendido</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Parceiro</th><th>Categoria</th><th>Campanha</th><th class="num">Investido</th><th class="num">Vendas</th><th class="num">Invest./venda</th></tr></thead>
+        <tbody>${E.map(e => `<tr><td>${e.id}</td><td>${cat(e.categoria)}</td><td>${nomeCamp(e.campanha)}</td><td class="num">${brl(e.investido)}</td><td class="num">${brl(e.vendas)}</td><td class="num">${pct(e.investido / e.vendas, 2)}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <p class="small">Excluímos a campanha em litros (outra unidade) e os supervisores (faturamento já contado nos vendedores). Parceiros com investimento muito baixo podem ter recebido o prêmio só em um mês; vale olhar junto com a duração.</p>
+    </section>`;
+  }}
+}});
+</script>
+</body>
+</html>

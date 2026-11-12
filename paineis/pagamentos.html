@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagamentos | BI de Marketing</title>
+<meta name="description" content="Pagamentos de ações de marketing por status, unidade e tipo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body data-root="../" data-painel="pagamentos">
+<div id="app"></div>
+<script src="../assets/dados.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+const pg = DADOS.pagamentos, T = M.pgTotal;
+const tabela = (rows, rot) => `<div class="tscroll"><table><thead><tr><th>${rot}</th><th class="num">Valor</th><th class="num">Qtd.</th><th class="num">%</th></tr></thead>
+  <tbody>${rows.map(([n, v, q]) => `<tr><td>${n}</td><td class="num">${brl(v)}</td><td class="num">${q}</td><td class="num">${pct(v / T, 0)}</td></tr>`).join("")}</tbody>
+  <tfoot><tr><td>Total</td><td class="num">${brl(T)}</td><td class="num">${M.pgQtd}</td><td class="num">100%</td></tr></tfoot></table></div>`;
+Painel.montar({ views: { geral: { tab: "Geral", render: () => `
+  ${nota("warn", `<b>Qualidade da base.</b> ${pg.comErro} de ${pg.registros} registros vieram com erro de fórmula (#REF!) na planilha de origem e foram retirados dos totais. Os números abaixo usam só os ${pg.registros - pg.comErro} registros válidos.`)}
+  ${kpis(
+    kpi("Total processado", brlC(T), `${M.pgQtd} pagamentos`),
+    kpi("Pago", brlC(M.pago.valor), `${M.pago.qtd} pagamentos`, "green"),
+    kpi("Atrasado", brlC(M.atrasado.valor), `${M.atrasado.qtd} pagamentos, ${pct(M.atrasado.valor / T, 0)} do total`, "red"))}
+  <section class="panel"><h2>Status dos pagamentos</h2>
+    <div class="stacked" role="img" aria-label="${pg.porStatus.map(s => s.nome + " " + pct(s.valor / T, 0)).join(", ")}">${pg.porStatus.map(s => `<span style="width:${s.valor / T * 100}%;background:${s.cor}"></span>`).join("")}</div>
+    <div class="legend">${pg.porStatus.map(s => `<div><span class="sw" style="background:${s.cor}"></span>${s.nome}<b>${brlC(s.valor)}</b></div>`).join("")}</div>
+  </section>
+  <div class="grid2">
+    <section class="panel"><h2>Por unidade</h2>${tabela(pg.porUnidade, "Unidade")}</section>
+    <section class="panel"><h2>Por tipo de ação</h2>${tabela(pg.porTipo, "Tipo")}</section>
+  </div>`
+}}});
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planejamento x gasto | BI de Marketing</title>
+<meta name="description" content="Orçamento anual previsto contra realizado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body data-root="../" data-painel="planejamento">
+<div id="app"></div>
+<script src="../assets/dados.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+const pl = DADOS.planejamento;
+Painel.montar({ views: { geral: { tab: "Geral", render: () => `
+  ${kpis(
+    kpi("Orçamento anual", brlC(M.orcamento), "soma das linhas de campanha"),
+    kpi("Realizado", brlC(M.realizado), `${pct(M.exec)} do orçamento, ${pl.referencia}`),
+    kpi("Saldo disponível", brlC(M.saldo), `${pct(1 - M.exec)} ainda não gasto`))}
+  <section class="panel"><h2>Execução contra o ritmo do ano</h2>
+    <div class="bigline"><span class="pct">${pct(M.exec)}</span><span class="txt">executado. Com ${pl.mesesDecorridos} de 12 meses passados, um gasto linear estaria em ${pct(M.ritmo, 0)}.</span></div>
+    <div class="gauge" role="img" aria-label="Executado ${pct(M.exec)}; ritmo linear ${pct(M.ritmo, 0)}"><div class="fill" style="width:${M.exec * 100}%"></div><div class="mark" style="left:${M.ritmo * 100}%"></div></div>
+    <div class="gauge-legend"><span>Realizado <b>${brlC(M.realizado)}</b></span><span>Marca: ritmo linear (${pct(M.ritmo, 0)})</span><span>Saldo <b>${brlC(M.saldo)}</b></span></div>
+  </section>
+  <section class="panel"><h2>Linhas de orçamento</h2>
+    <div class="tscroll"><table>
+      <thead><tr><th>Campanha ou ação</th><th class="num">Previsto (ano)</th><th class="num">Realizado</th><th>Execução</th><th class="num">%</th></tr></thead>
+      <tbody>${pl.linhas.map(l => { const p = l.realizado === null ? null : l.realizado / l.previsto;
+        return `<tr><td>${l.nome}</td><td class="num">${brl(l.previsto)}</td><td class="num">${p === null ? "sem detalhe" : brl(l.realizado)}</td><td>${p === null ? "" : barra(p, pct(p, 0) + " executado")}</td><td class="num ${p === 0 ? "neg" : ""}">${p === null ? "–" : pct(p, 0)}</td></tr>`; }).join("")}</tbody>
+      <tfoot><tr><td>Total</td><td class="num">${brl(M.orcamento)}</td><td class="num">${brl(M.realizado)}</td><td></td><td class="num">${pct(M.exec, 0)}</td></tr></tfoot>
+    </table></div>
+    <p class="small">${M.semRealizado} linhas ainda não têm o gasto lançado mês a mês na planilha de origem; elas entram no previsto, mas não no realizado.</p>
+  </section>
+  ${nota("info", `<b>Verba não é orçamento.</b> A planilha traz uma "verba" de ${brlC(pl.baseVerba)}, que é a previsão de vendas usada como base de cálculo. O orçamento real de marketing é a soma das linhas acima.`)}`
+}}});
+</script>
+</body>
+</html>

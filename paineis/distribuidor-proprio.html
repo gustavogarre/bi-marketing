@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distribuidor próprio | BI de Marketing</title>
+<meta name="description" content="Premiação das equipes de venda das distribuidoras do grupo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body data-root="../" data-painel="distribuidor-proprio">
+<div id="app"></div>
+<script src="../assets/dados.js"></script>
+<script src="../assets/comum.js"></script>
+<script>
+const D = DADOS.proprio;
+const supDo = id => D.supervisao.filter(s => s.time === id);
+const timeView = t => ({
+  tab: `${t.nome.replace("Distribuidora ", "")} (${t.uf})`,
+  render: () => {
+    const maxV = t.vendedores[0][2], mediaGrupo = M.prInv / M.prVend;
+    const sup = supDo(t.id);
+    const melhor = t.razao <= mediaGrupo;
+    return `
+    ${kpis(
+      kpi("Vendedores premiados", t.vendedoresQtd),
+      kpi("Investido", brlC(t.investido), `${t.meses} ${t.meses > 1 ? "meses" : "mês"} de apuração`),
+      kpi("Vendas geradas", brlC(t.vendas), pct(t.vendas / M.prVend, 0) + " das vendas do grupo"),
+      kpi("Investimento sobre venda", pct(t.razao, 2), `média do grupo: ${pct(mediaGrupo, 2)}`, melhor ? "green" : "red"))}
+    ${nota("info", `<b>${melhor ? "Mais eficiente que a média do grupo." : "Menos eficiente que a média do grupo."}</b> A ${t.nome} investe ${pct(t.razao, 2)} de cada real vendido, contra ${pct(mediaGrupo, 2)} na média das três distribuidoras.${t.meses === 1 ? " Com só um mês apurado, o número ainda pode mudar bastante." : ""}`)}
+    <section class="panel"><h2>Cinco maiores vendedores</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Vendedor</th><th class="num">Investido</th><th class="num">Vendas</th><th>Vendas</th><th class="num">Invest./venda</th></tr></thead>
+        <tbody>${t.vendedores.map(([n, i, v]) => `<tr><td>${n}</td><td class="num">${brl(i)}</td><td class="num">${brl(v)}</td><td>${barra(v / maxV, brl(v))}</td><td class="num">${pct(i / v, 2)}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <p class="small">Os cinco somam ${brlC(sum(t.vendedores, x => x[2]))}, ou ${pct(sum(t.vendedores, x => x[2]) / t.vendas, 0)} das vendas da equipe.</p>
+    </section>
+    ${sup.length ? `<section class="panel"><h2>Supervisão desta equipe</h2>
+      ${sup.map(s => `<div class="row"><span>${s.nome}</span><span>${s.investido === null ? "sem premiação" : brl(s.investido)}</span></div>`).join("")}
+      <p class="small">Fora da soma acima: o faturamento da supervisão é a soma da equipe, que já está contada nos vendedores.</p></section>` : ""}`;
+  }
+});
+
+const views = {
+  geral: { tab: "Geral", render: () => {
+    const maxV = Math.max(...M.times.map(t => t.vendas));
+    return `
+    ${kpis(
+      kpi("Vendedores premiados", M.prVendedores, "sem contar supervisão"),
+      kpi("Investido", brlC(M.prInv), "premiação individual"),
+      kpi("Vendas geradas", brlC(M.prVend), D.periodo),
+      kpi("Investimento sobre venda", pct(M.prInv / M.prVend, 2), "investido ÷ vendas"))}
+    <section class="panel"><h2>Resultado por distribuidora</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Distribuidora</th><th class="num">Vendedores</th><th class="num">Investido</th><th class="num">Vendas</th><th>Participação</th><th class="num">Invest./venda</th></tr></thead>
+        <tbody>${M.times.map(t => `<tr><td><a href="#${t.id}">${t.nome} (${t.uf})</a></td><td class="num">${t.vendedoresQtd}</td><td class="num">${brl(t.investido)}</td><td class="num">${brlC(t.vendas)}</td><td>${barra(t.vendas / maxV, pct(t.vendas / M.prVend, 0) + " das vendas")}</td><td class="num">${pct(t.razao, 2)}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td>Total</td><td class="num">${M.prVendedores}</td><td class="num">${brl(M.prInv)}</td><td class="num">${brlC(M.prVend)}</td><td></td><td class="num">${pct(M.prInv / M.prVend, 2)}</td></tr></tfoot>
+      </table></div>
+      <p class="small">Clique em uma distribuidora para ver os vendedores.</p>
+    </section>
+    <section class="panel"><h2>Investimento em supervisão (separado)</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Cargo</th><th>Equipe</th><th class="num">Investido</th></tr></thead>
+        <tbody>${D.supervisao.map(s => `<tr><td>${s.nome}</td><td>${M.times.find(t => t.id === s.time).nome}</td><td class="num">${s.investido === null ? "sem premiação" : brl(s.investido)}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <p class="small">Total de ${brl(M.supInv)}. As vendas desses times já estão nos números dos vendedores, por isso a supervisão fica fora da soma para não contar o faturamento duas vezes.</p>
+    </section>`;
+  }}
+};
+M.times.forEach(t => views[t.id] = timeView(t));
+Painel.montar({ views });
+</script>
+</body>
+</html>
